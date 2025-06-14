@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: take-meow-home
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./src/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - app-network
+
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - DB_DATABASE=take-meow-home
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+    command: >
+      sh -c "npm run migration:run && npm run start:dev"
+
+volumes:
+  mysql-data:
+
+networks:
+  app-network:
+    driver: bridge 
